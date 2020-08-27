@@ -1,10 +1,13 @@
 package com.kissan.photoappusers.ui.controller;
 
 import com.kissan.photoappusers.service.UserService;
+import com.kissan.photoappusers.shared.UserDTO;
 import com.kissan.photoappusers.ui.model.request.UserRequest;
 import com.kissan.photoappusers.ui.model.response.UserResponse;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +20,8 @@ import javax.validation.Valid;
 public class UserController {
     @Autowired
     private UserService userService;
+    @Autowired
+    private Environment env;
 
     @GetMapping
     public ResponseEntity<UserResponse[]> getUsers(@RequestParam(value = "page", defaultValue = "1") int page,
@@ -29,10 +34,14 @@ public class UserController {
                 produces = {MediaType.APPLICATION_XML_VALUE,
                             MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<UserResponse> getUser(@PathVariable("userId") String userId){
-        System.out.println("userId in getUser = " + userId);
-        UserResponse userResponse = userService.getUser(userId);
-        System.out.println("userResponse in getUser = " + userResponse);
-        if(userResponse !=null){
+        System.out.println("userId in getUser = " + userId+
+                env.getProperty("user.server.port") +
+                "; with token = " +env.getProperty("token.secret"));
+        UserDTO userDTO = userService.getUser(userId);
+        System.out.println("userResponse in getUser = " + userDTO);
+        if(userDTO !=null){
+            UserResponse userResponse = (new ModelMapper()).map(userDTO, UserResponse.class);
+            System.out.println("userResponse in adduser = " + userResponse);
             return new ResponseEntity<>(userResponse, HttpStatus.OK);
         }else{
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -46,14 +55,17 @@ public class UserController {
                     MediaType.APPLICATION_JSON_VALUE}
             )
     public ResponseEntity<UserResponse> addUser(@Valid @RequestBody UserRequest userRequest){
-        System.out.println("userRequest in adduser = " + userRequest);
-        UserResponse userResponse = userService.createUser(userRequest);
+
+        ModelMapper modelMapper = new ModelMapper();
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        UserDTO userDTO = modelMapper.map(userRequest, UserDTO.class);
+
+        userDTO = userService.createUser(userDTO);
+
+        UserResponse userResponse = modelMapper.map(userDTO, UserResponse.class);
         System.out.println("userResponse in adduser = " + userResponse);
-        //
-        // HttpHeaders headers = new HttpHeaders();
-        // todo add hostname to url
-        //headers.add("Location", );
-        return new ResponseEntity<UserResponse>(userResponse, HttpStatus.OK);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
     }
 
     @PutMapping(value = "/{userId}",
