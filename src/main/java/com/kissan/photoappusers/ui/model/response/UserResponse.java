@@ -1,10 +1,13 @@
 package com.kissan.photoappusers.ui.model.response;
 
+import java.util.List;
+
 public class UserResponse {
     private String userId;
     private String firstName;
     private String lastName;
     private String email;
+    private List<AlbumResponse> albums;
 
     public String getUserId() {
         return userId;
@@ -38,6 +41,14 @@ public class UserResponse {
         this.email = email;
     }
 
+    public List<AlbumResponse> getAlbums() {
+        return albums;
+    }
+
+    public void setAlbums(List<AlbumResponse> albums) {
+        this.albums = albums;
+    }
+
     @Override
     public String toString() {
         return "UserResponse{" +
@@ -45,6 +56,7 @@ public class UserResponse {
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
+                ", albums=" + albums +
                 '}';
     }
 }

@@ -38,10 +38,28 @@ public class UserController {
                 env.getProperty("user.server.port") +
                 "; with token = " +env.getProperty("token.secret"));
         UserDTO userDTO = userService.getUser(userId);
-        System.out.println("userResponse in getUser = " + userDTO);
+        //System.out.println("userResponse in getUser = " + userDTO);
         if(userDTO !=null){
             UserResponse userResponse = (new ModelMapper()).map(userDTO, UserResponse.class);
-            System.out.println("userResponse in adduser = " + userResponse);
+            System.out.println("userResponse in getUser = " + userResponse);
+            return new ResponseEntity<>(userResponse, HttpStatus.OK);
+        }else{
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+    }
+
+    @GetMapping(value = "/{userId}/albums",
+            produces = {MediaType.APPLICATION_XML_VALUE,
+                    MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<UserResponse> getUserAlbum(@PathVariable("userId") String userId){
+        System.out.println("userId in getUserAlbum = " + userId+
+                env.getProperty("user.server.port") +
+                "; with token = " +env.getProperty("token.secret"));
+        UserDTO userDTO = userService.getUserAlbums(userId);
+        //System.out.println("userResponse in getUserAlbum = " + userDTO);
+        if(userDTO !=null){
+            UserResponse userResponse = (new ModelMapper()).map(userDTO, UserResponse.class);
+            System.out.println("userResponse in getUserAlbum = " + userResponse);
             return new ResponseEntity<>(userResponse, HttpStatus.OK);
         }else{
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);

@@ -5,6 +5,7 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class UserDTO implements Serializable{
     private static final long serialVersionUID = 1051864910283036026L;
@@ -14,6 +15,7 @@ public class UserDTO implements Serializable{
     private String email;
     private String password;
     private String encryptedPassword;
+    private List<AlbumDTO> albums;
 
     public String getUserId() {
         return userId;
@@ -63,6 +65,13 @@ public class UserDTO implements Serializable{
         this.encryptedPassword = encryptedPassword;
     }
 
+    public List<AlbumDTO> getAlbums() {
+        return albums;
+    }
+
+    public void setAlbums(List<AlbumDTO> albums) {
+        this.albums = albums;
+    }
 
     @Override
     public boolean equals(Object o) {

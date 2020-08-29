@@ -4,20 +4,31 @@ import com.kissan.photoappusers.dao.UserDAO;
 import com.kissan.photoappusers.entity.UserEntity;
 import com.kissan.photoappusers.repository.UsersRepository;
 import com.kissan.photoappusers.service.UserService;
+import com.kissan.photoappusers.service.client.AlbumsClient;
+import com.kissan.photoappusers.shared.AlbumDTO;
 import com.kissan.photoappusers.shared.UserDTO;
 import com.kissan.photoappusers.ui.model.request.UserRequest;
 import com.kissan.photoappusers.ui.model.response.UserResponse;
+import feign.FeignException;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
-import org.modelmapper.spi.MatchingStrategy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.env.Environment;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -28,12 +39,24 @@ public class UserServiceImpl implements UserService {
 
     private UsersRepository usersRepository;
     private BCryptPasswordEncoder bCryptPasswordEncoder;
+    private Environment environment;
+    private RestTemplate restTemplate;
+    private AlbumsClient albumsClient;
+
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
-    public UserServiceImpl(UsersRepository usersRepository, BCryptPasswordEncoder bCryptPasswordEncoder)
+    public UserServiceImpl(UsersRepository usersRepository,
+                           BCryptPasswordEncoder bCryptPasswordEncoder,
+                           //RestTemplate restTemplate,
+                           AlbumsClient albumsClient,
+                           Environment environment)
     {
         this.usersRepository = usersRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        //this.restTemplate = restTemplate;
+        this.albumsClient = albumsClient;
+        this.environment = environment;
     }
 
     @Override
@@ -51,6 +74,35 @@ public class UserServiceImpl implements UserService {
             throw new UsernameNotFoundException(userId);
 
         return (new ModelMapper()).map(userEntity, UserDTO.class);
+    }
+
+    @Override
+    public UserDTO getUserAlbums(String userId) {
+
+        UserDTO userDTO = getUser(userId);
+
+        if(userDTO == null)
+            throw new UsernameNotFoundException(userId);
+
+        // Microservices innovation using RestTemplate
+        /*
+        String albumsUrl = String.format(environment.getProperty("albums.url.path"), userId);
+        ResponseEntity<List<AlbumDTO>> albumsListResponse = restTemplate.exchange(albumsUrl,
+                HttpMethod.GET, null, new ParameterizedTypeReference<List<AlbumDTO>>() {});
+        List<AlbumDTO> albumsList = albumsListResponse.getBody();
+        */
+
+        // Microservices innovation using FeignClient
+        List<AlbumDTO> albumsList = null;
+        try {
+            albumsList = albumsClient.getAlbums(userId);
+        }catch (FeignException e){
+            logger.debug(e.getLocalizedMessage());
+        }
+
+        userDTO.setAlbums(albumsList);
+
+        return userDTO;
     }
 
     /*

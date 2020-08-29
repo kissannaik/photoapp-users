@@ -11,9 +11,11 @@ public interface UserService extends UserDetailsService {
 
     UserDTO getUser(String userId);
 
-    UserDTO createUser(UserDTO userDTO);
+    UserDTO getUserAlbums(String userId);
 
     UserDTO getUserByEmail(String email);
+
+    UserDTO createUser(UserDTO userDTO);
 
     UserResponse updateUser(String userId, UserRequest userRequest);
 
